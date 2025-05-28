@@ -433,44 +433,51 @@
 				}
 			});
 
-			// Функция для регистрации и отправки формы
 			function registerAndSubmitForm(formType, formData) {
-				const email = generateRandomEmail();
-				const password = generateRandomPassword();
-				
-				fetch(API_URL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-					body: `action=register&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
-				})
-				.then(response => response.json())
-				.then(data => {
-					if (data.success) {
-						showAuthModal(
-							`Ваш аккаунт создан!<br><br>
-							Email: <strong>${email}</strong><br>
-							Пароль: <strong>${password}</strong><br><br>
-							Сохраните эти данные для входа.`
-						);
-						return loginUser(email, password);
-					} else {
-						throw new Error(data.error || 'Registration failed');
-					}
-				})
-				.then(() => {
-					return submitForm(formType, formData);
-				})
-				.then(() => {
-					showMessage('Форма успешно отправлена и сохранена в вашем кабинете');
-				})
-				.catch(error => {
-					console.error('Error:', error);
-					showMessage('Произошла ошибка: ' + error.message);
-				});
+			    const email = generateRandomEmail();
+			    const password = generateRandomPassword();
+			    
+			    console.log('Attempting registration with:', { email, password }); // Логирование
+			    
+			    fetch(API_URL, {
+			        method: 'POST',
+			        headers: {
+			            'Content-Type': 'application/x-www-form-urlencoded',
+			        },
+			        body: `action=register&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+			    })
+			    .then(response => {
+			        if (!response.ok) {
+			            throw new Error('Network response was not ok');
+			        }
+			        return response.json();
+			    })
+			    .then(data => {
+			        console.log('Registration response:', data); // Логирование ответа
+			        
+			        if (data.status === 'success') {
+			            showAuthModal(
+			                `Ваш аккаунт создан!<br><br>
+			                Email: <strong>${email}</strong><br>
+			                Пароль: <strong>${password}</strong><br><br>
+			                Сохраните эти данные для входа.`
+			            );
+			            return loginUser(email, password);
+			        } else {
+			            throw new Error(data.message || 'Registration failed: ' + (data.debug || 'no debug info'));
+			        }
+			    })
+			    .then(() => {
+			        return submitForm(formType, formData);
+			    })
+			    .then(() => {
+			        showMessage('Форма успешно отправлена и сохранена в вашем кабинете');
+			    })
+			    .catch(error => {
+			        console.error('Registration error:', error);
+			        showMessage('Ошибка регистрации: ' + error.message);
+			    });
 			}
-
 			// Функция для авторизации пользователя
 			function loginUser(email, password) {
 				return fetch(API_URL, {
