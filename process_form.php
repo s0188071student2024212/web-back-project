@@ -43,15 +43,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     try {
         // Сохранение пользователя
-        $stmt = $pdo->prepare("INSERT INTO users (login, password, fio, phone, email) 
-                              VALUES (?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO users (login, password, fio, phone, email, dob, gender, bio) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $login,
             $hashedPassword,
             $_POST['name'],
             $_POST['phone_number'],
-            $_POST['email']
+            $_POST['email'],
+            '2000-01-01', // дефолтная дата
+            'male',       // дефолтный пол
+            'No bio'      // дефолтная биография
         ]);
+    
+    $user_id = $pdo->lastInsertId();
+    
+    // Сохранение контакта с user_id
+    $stmt = $pdo->prepare("INSERT INTO contacts 
+                          (user_id, name, phone, email, message, agreement, created_at) 
+                          VALUES (?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->execute([
+        $user_id,
+        $_POST['name'],
+        $_POST['phone_number'],
+        $_POST['email'],
+        $_POST['message'] ?? null,
+        isset($_POST['agreement']) ? 1 : 0
+    ]);
         
         // Сохранение сообщения
         if (!empty($_POST['message'])) {
@@ -74,9 +92,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
         
     } catch (PDOException $e) {
-        $_SESSION['form_error'] = "Database error: " . $e->getMessage();
-        header("Location: index.php#contact-form");
-        exit();
+    $_SESSION['form_error'] = "Database error: " . $e->getMessage();
+    header("Location: index.php#contact-form");
+    exit();
     }
 } else {
     header("Location: index.php");
