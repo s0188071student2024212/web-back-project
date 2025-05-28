@@ -3,7 +3,7 @@ session_start();
 require_once 'db_connection.php';
 
 // Проверка авторизации администратора
-if (!isset($_SESSION['admin_logged_in']) {
+if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: login.php");
     exit();
 }
