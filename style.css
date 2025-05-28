@@ -1146,3 +1146,88 @@ footer{
       }
   
   }
+/* Сообщения формы */
+.error-message {
+    color: #ff0000;
+    background-color: #ffeeee;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ffcccc;
+}
+
+.success-message {
+    color: #008000;
+    background-color: #eeffee;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccffcc;
+}
+
+/* Подсветка невалидных полей */
+input:invalid, textarea:invalid {
+    border-color: #ff9999;
+}
+
+/* Стили для формы */
+.pre_footer_form_wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.pre_footer_form_wrapper h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+.pre_footer_form_wrapper span {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: 500;
+}
+
+.pre_footer_form_wrapper input,
+.pre_footer_form_wrapper textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.pre_footer_form_wrapper textarea {
+    height: 120px;
+    resize: vertical;
+}
+
+.pre_footer_form_check {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+}
+
+.pre_footer_form_check input {
+    width: auto;
+    margin-right: 10px;
+}
+
+.form_button button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.form_button button:hover {
+    background-color: #0d5bba;
+}
