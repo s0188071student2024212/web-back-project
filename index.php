@@ -246,31 +246,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['contact_form'])) {
 					</div>
 			</div>
 			<div class="pre_footer">
-				<div class="pre_footer_form_wrapper">
-					<h2>A quick way to discuss details</h2>
-					<form id="contact-form" method="post" action="#">
-						<span>Name*</span>
-						<input type="text" name="name" placeholder="Your name" required>
-						
-						<span>Phone*</span>
-						<input type="number" name="phone_number" placeholder="Your phone number" required>
-						
-						<span>Email*</span>
-						<input type="email" name="email" placeholder="Your working email" required>
-						
-						<span>Message</span>
-						<textarea name="message" placeholder="Your message"></textarea>
-						
-						<div class="pre_footer_form_check">
-							<input type="checkbox" name="agreement" required>
-							<span>I agree to receive communications from Createx Construction Bureau.</span>
-						</div>
-						
-						<div class="form_button">
-							<button type="submit"><span>Send request</span></button>
-						</div>
-					</form>				
-				</div>
+			    <div class="pre_footer_form_wrapper">
+			        <h2>A quick way to discuss details</h2>
+			        <form id="contact-form" method="post" action="process_form.php">
+			            <?php if (isset($_SESSION['form_error'])): ?>
+			                <div class="error-message"><?php echo $_SESSION['form_error']; unset($_SESSION['form_error']); ?></div>
+			            <?php endif; ?>
+			            
+			            <?php if (isset($_SESSION['form_success'])): ?>
+			                <div class="success-message"><?php echo $_SESSION['form_success']; unset($_SESSION['form_success']); ?></div>
+			            <?php endif; ?>
+			            
+			            <span>Name*</span>
+			            <input type="text" name="name" placeholder="Your name" value="<?php echo isset($_SESSION['form_data']['name']) ? htmlspecialchars($_SESSION['form_data']['name']) : ''; ?>" required>
+			            
+			            <span>Phone*</span>
+			            <input type="tel" name="phone_number" placeholder="Your phone number" value="<?php echo isset($_SESSION['form_data']['phone_number']) ? htmlspecialchars($_SESSION['form_data']['phone_number']) : ''; ?>" required>
+			            
+			            <span>Email*</span>
+			            <input type="email" name="email" placeholder="Your working email" value="<?php echo isset($_SESSION['form_data']['email']) ? htmlspecialchars($_SESSION['form_data']['email']) : ''; ?>" required>
+			            
+			            <span>Message</span>
+			            <textarea name="message" placeholder="Your message"><?php echo isset($_SESSION['form_data']['message']) ? htmlspecialchars($_SESSION['form_data']['message']) : ''; ?></textarea>
+			            
+			            <div class="pre_footer_form_check">
+			                <input type="checkbox" name="agreement" <?php echo isset($_SESSION['form_data']['agreement']) ? 'checked' : ''; ?> required>
+			                <span>I agree to receive communications from Createx Construction Bureau.</span>
+			            </div>
+			            
+			            <div class="form_button">
+			                <button type="submit"><span>Send request</span></button>
+			            </div>
+			        </form>
+			    </div>
 			</div>
 		</main>
 		<footer>
