@@ -55,41 +55,40 @@ try {
 echo json_encode($response);
 
 function handleClientRegistration($pdo) {
-    $required = ['email', 'password'];
-    foreach ($required as $field) {
-        if (empty($_POST[$field])) {
-            return ['status' => 'error', 'message' => "Missing required field: $field"];
-        }
+    // Проверяем обязательные поля
+    if (empty($_POST['email']) || empty($_POST['password'])) {
+        return ['status' => 'error', 'message' => 'Email and password are required'];
     }
-    
+
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return ['status' => 'error', 'message' => 'Invalid email format'];
     }
-    
+
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-    
-    $stmt = $pdo->prepare("
-        INSERT INTO construction_clients (email, password_hash) 
-        VALUES (?, ?)
-    ");
-    
+
     try {
+        $stmt = $pdo->prepare("INSERT INTO construction_users (email, password_hash) VALUES (?, ?)");
         $stmt->execute([$email, $password]);
-        $_SESSION['client_id'] = $pdo->lastInsertId();
-        $_SESSION['client_email'] = $email;
         
         return [
             'status' => 'success',
-            'client_id' => $_SESSION['client_id'],
-            'email' => $email
+            'email' => $email,
+            'debug' => 'Registration successful' // Для отладки
         ];
-        
     } catch (PDOException $e) {
-        if ($e->errorInfo[1] == 1062) {
-            return ['status' => 'error', 'message' => 'Email already registered'];
+        $errorCode = $e->errorInfo[1] ?? 0;
+        $errorMsg = 'Registration failed';
+        
+        if ($errorCode == 1062) {
+            $errorMsg = 'Email already exists';
         }
-        throw $e;
+        
+        return [
+            'status' => 'error',
+            'message' => $errorMsg,
+            'debug' => $e->getMessage() // Для отладки
+        ];
     }
 }
 
