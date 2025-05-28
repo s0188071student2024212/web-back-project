@@ -1231,3 +1231,19 @@ input:invalid, textarea:invalid {
 .form_button button:hover {
     background-color: #0d5bba;
 }
+.authenticated-message {
+    padding: 20px;
+    background-color: #f0f8ff;
+    border-radius: 5px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.authenticated-message a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.authenticated-message a:hover {
+    text-decoration: underline;
+}
