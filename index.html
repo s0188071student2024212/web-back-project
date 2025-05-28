@@ -44,6 +44,9 @@
 					</div>
 				</div>
 			</div>
+			<div class="auth-buttons">
+				<button id="login-btn" class="login-btn">Войти</button>
+			</div>
 		</div>
 		<div class="back_img1_4">
 			<img class="c1" src="img/bg-image.svg" alt="">
@@ -327,13 +330,35 @@
 			</div>
 		</footer>
 		<script>
-						// Базовый URL для API запросов
+			// Базовый URL для API запросов
 			const API_URL = 'api.php';
+			let currentUser = null;
 
 			// Проверка авторизации при загрузке страницы
 			document.addEventListener('DOMContentLoaded', () => {
 				checkAuthStatus();
+				
+				// Обработчики модального окна
+				document.querySelector('.close-modal').addEventListener('click', closeAuthModal);
+				window.addEventListener('click', (event) => {
+					if (event.target === document.getElementById('auth-modal')) {
+						closeAuthModal();
+					}
+				});
+				
+				// Обработчик кнопки входа
+				document.getElementById('login-btn').addEventListener('click', showAuthModal);
 			});
+
+			// Функции для работы с модальным окном
+			function showAuthModal(message = '') {
+				document.getElementById('auth-message').innerHTML = message;
+				document.getElementById('auth-modal').style.display = 'block';
+			}
+
+			function closeAuthModal() {
+				document.getElementById('auth-modal').style.display = 'none';
+			}
 
 			// Функция для проверки статуса авторизации
 			function checkAuthStatus() {
@@ -342,17 +367,34 @@
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					body: 'action=check_auth'
+					body: 'action=check_session'
 				})
 				.then(response => response.json())
 				.then(data => {
 					if (data.authenticated) {
 						currentUser = data.email;
-						showPersonalCabinet();
+						updateAuthUI();
 					}
 				})
 				.catch(error => console.error('Error:', error));
 			}
+
+			// Обработчик формы авторизации
+			document.getElementById('login-form').addEventListener('submit', function(e) {
+				e.preventDefault();
+				
+				const email = document.getElementById('login-email').value;
+				const password = document.getElementById('login-password').value;
+				
+				loginUser(email, password)
+					.then(() => {
+						closeAuthModal();
+						showMessage('Вы успешно авторизовались');
+					})
+					.catch(error => {
+						document.getElementById('auth-message').textContent = error.message;
+					});
+			});
 
 			// Обработчик формы contact-us
 			document.querySelector('.three_forms').addEventListener('submit', function(e) {
@@ -365,7 +407,8 @@
 				};
 				
 				if (currentUser) {
-					submitForm('contact', formData);
+					submitForm('contact', formData)
+						.then(() => showMessage('Форма успешно отправлена'));
 				} else {
 					registerAndSubmitForm('contact', formData);
 				}
@@ -383,7 +426,8 @@
 				};
 				
 				if (currentUser) {
-					submitForm('footer_contact', formData);
+					submitForm('footer_contact', formData)
+						.then(() => showMessage('Форма успешно отправлена'));
 				} else {
 					registerAndSubmitForm('footer_contact', formData);
 				}
@@ -408,19 +452,14 @@
 							`Ваш аккаунт создан!<br><br>
 							Email: <strong>${email}</strong><br>
 							Пароль: <strong>${password}</strong><br><br>
-							Сохраните эти данные для входа.`,
-							email,
-							password
+							Сохраните эти данные для входа.`
 						);
-						
-						// Автоматически авторизуем пользователя
 						return loginUser(email, password);
 					} else {
 						throw new Error(data.error || 'Registration failed');
 					}
 				})
 				.then(() => {
-					// После успешной авторизации отправляем форму
 					return submitForm(formType, formData);
 				})
 				.then(() => {
@@ -432,11 +471,32 @@
 				});
 			}
 
+			// Функция для авторизации пользователя
+			function loginUser(email, password) {
+				return fetch(API_URL, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+					body: `action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+				})
+				.then(response => response.json())
+				.then(data => {
+					if (data.success) {
+						currentUser = data.email;
+						updateAuthUI();
+						return data;
+					} else {
+						throw new Error(data.error || 'Неверный email или пароль');
+					}
+				});
+			}
+
 			// Функция для отправки формы
 			function submitForm(formType, formData) {
 				const formDataEncoded = new URLSearchParams();
-				formDataEncoded.append('action', 'submit_form');
-				formDataEncoded.append('form_type', formType);
+				formDataEncoded.append('action', 'submit_request');
+				formDataEncoded.append('request_type', formType);
 				
 				for (const key in formData) {
 					if (formData[key]) {
@@ -460,140 +520,37 @@
 				});
 			}
 
-			// Функция для авторизации пользователя
-			function loginUser(email, password) {
-				return fetch(API_URL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-					body: `action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
-				})
-				.then(response => response.json())
-				.then(data => {
-					if (data.success) {
-						currentUser = email;
-						showPersonalCabinet();
-						return data;
-					} else {
-						throw new Error(data.error || 'Login failed');
-					}
-				});
+			// Обновление интерфейса при авторизации
+			function updateAuthUI() {
+				if (currentUser) {
+					document.getElementById('login-btn').textContent = 'Личный кабинет';
+					document.getElementById('login-btn').classList.add('logged-in');
+					document.getElementById('personal-cabinet').style.display = 'block';
+					document.getElementById('username-display').textContent = currentUser;
+					loadUserForms();
+				} else {
+					document.getElementById('login-btn').textContent = 'Войти';
+					document.getElementById('login-btn').classList.remove('logged-in');
+					document.getElementById('personal-cabinet').style.display = 'none';
+				}
 			}
 
-			// Функция для показа личного кабинета
-			function showPersonalCabinet() {
-				document.getElementById('personal-cabinet').style.display = 'block';
-				document.getElementById('username-display').textContent = currentUser;
-				loadUserForms();
-			}
-
-			// Функция для загрузки форм пользователя
-			function loadUserForms() {
+			// Обработчик кнопки выхода
+			document.getElementById('logout-btn').addEventListener('click', function() {
 				fetch(API_URL, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded',
 					},
-					body: 'action=get_forms'
+					body: 'action=logout'
 				})
-				.then(response => response.json())
-				.then(data => {
-					if (data.success) {
-						displayUserForms(data.forms);
-					} else {
-						throw new Error(data.error || 'Failed to load forms');
-					}
+				.then(() => {
+					currentUser = null;
+					updateAuthUI();
+					showMessage('Вы вышли из системы');
 				})
-				.catch(error => {
-					console.error('Error:', error);
-					showMessage('Ошибка при загрузке форм: ' + error.message);
-				});
-			}
-
-			// Функция для отображения форм пользователя
-			function displayUserForms(forms) {
-				const formsList = document.getElementById('user-forms-list');
-				formsList.innerHTML = '';
-				
-				if (!forms || forms.length === 0) {
-					formsList.innerHTML = '<p>Вы еще не отправляли формы.</p>';
-					return;
-				}
-				
-				forms.forEach(form => {
-					const formData = form.submission_data ? JSON.parse(form.submission_data) : {};
-					const formElement = document.createElement('div');
-					formElement.className = 'user-form';
-					formElement.innerHTML = `
-						<h4>${form.form_type} - ${new Date(form.created_at).toLocaleString()}</h4>
-						<form class="edit-form" data-id="${form.id}">
-							<div class="form-group">
-								<label>Имя: <input type="text" value="${formData.name || ''}"></label>
-							</div>
-							<div class="form-group">
-								<label>Телефон: <input type="tel" value="${formData.phone || ''}"></label>
-							</div>
-							<div class="form-group">
-								<label>Email: <input type="email" value="${formData.email || ''}"></label>
-							</div>
-							<div class="form-group">
-								<label>Сообщение: <textarea>${formData.message || ''}</textarea></label>
-							</div>
-							<button type="submit" class="submit-btn">Сохранить изменения</button>
-						</form>
-					`;
-					formsList.appendChild(formElement);
-				});
-				
-				// Добавляем обработчики для форм редактирования
-				document.querySelectorAll('.edit-form').forEach(form => {
-					form.addEventListener('submit', function(e) {
-						e.preventDefault();
-						const formId = this.getAttribute('data-id');
-						const formData = {
-							name: this.querySelector('input[type="text"]').value,
-							phone: this.querySelector('input[type="tel"]').value,
-							email: this.querySelector('input[type="email"]').value,
-							message: this.querySelector('textarea').value
-						};
-						
-						updateForm(formId, formData);
-					});
-				});
-			}
-
-			// Функция для обновления формы
-			function updateForm(formId, formData) {
-				const formDataEncoded = new URLSearchParams();
-				formDataEncoded.append('action', 'update_form');
-				formDataEncoded.append('form_id', formId);
-				
-				for (const key in formData) {
-					formDataEncoded.append(key, formData[key]);
-				}
-				
-				fetch(API_URL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-					body: formDataEncoded
-				})
-				.then(response => response.json())
-				.then(data => {
-					if (data.success) {
-						showMessage('Изменения сохранены');
-						loadUserForms(); // Обновляем список форм
-					} else {
-						throw new Error(data.error || 'Update failed');
-					}
-				})
-				.catch(error => {
-					console.error('Error:', error);
-					showMessage('Ошибка при сохранении: ' + error.message);
-				});
-			}
+				.catch(error => console.error('Error:', error));
+			});
 
 			// Вспомогательные функции
 			function generateRandomEmail() {
@@ -611,23 +568,6 @@
 				document.body.appendChild(msg);
 				setTimeout(() => msg.remove(), 3000);
 			}
-
-			// Выход из системы
-			document.getElementById('logout-btn').addEventListener('click', function() {
-				fetch(API_URL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-					body: 'action=logout'
-				})
-				.then(() => {
-					currentUser = null;
-					document.getElementById('personal-cabinet').style.display = 'none';
-					showMessage('Вы вышли из системы');
-				})
-				.catch(error => console.error('Error:', error));
-			});
 		</script>
 	</body>
 </html>
