@@ -248,6 +248,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['contact_form'])) {
 			<div class="pre_footer">
 			    <div class="pre_footer_form_wrapper">
 			        <h2>A quick way to discuss details</h2>
+			        
+			        <?php if (isset($_SESSION['user_id'])): ?>
+			            <div class="authenticated-message">
+			                <p>You are already logged in. <a href="edit.php">Edit your profile</a> or <a href="logout.php">logout</a>.</p>
+			            </div>
+			        <?php else: ?>
 			        <form id="contact-form" method="post" action="process_form.php">
 			            <?php if (isset($_SESSION['form_error'])): ?>
 			                <div class="error-message"><?php echo $_SESSION['form_error']; unset($_SESSION['form_error']); ?></div>
@@ -278,6 +284,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['contact_form'])) {
 			                <button type="submit"><span>Send request</span></button>
 			            </div>
 			        </form>
+				 <?php endif; ?>
 			    </div>
 			</div>
 		</main>
